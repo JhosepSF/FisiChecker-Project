@@ -1,330 +1,194 @@
-# FisiChecker - Backend
+# 🔍 FisiChecker — Sistema Unificado de Auditoría de Accesibilidad Web (WCAG 2.1)
 
-Backend del proyecto FisiChecker, API REST para análisis automático de accesibilidad web según estándares WCAG 2.1.
+**FisiChecker** es una plataforma integral desarrollada en **Python & Django** para la evaluación, diagnóstico y reporte automático de accesibilidad web bajo el estándar internacional **WCAG 2.1 (Niveles A, AA y AAA)**.
 
-## 📋 Descripción del Proyecto
+El sistema integra interfaz web completa (HTML5 + CSS con soporte para tema oscuro + JavaScript nativo), motor de scraping y análisis de los 78 criterios de éxito WCAG, exportación multiformato (CSV y Excel) y API REST.
 
-FisiChecker Backend es una API RESTful desarrollada con Django que proporciona servicios de auditoría de accesibilidad web. El sistema evalúa sitios web contra los criterios WCAG 2.1 (niveles A, AA, AAA) utilizando múltiples modos de análisis: HTML estático, renderizado dinámico e integración con IA.
-
-## 🔗 Repositorios
-
-- **Frontend**: [FisiChecker-Project-Front](https://github.com/JhosepSF/FisiChecker-Project-Front)
-- **Backend**: [FisiChecker-Project-Back](https://github.com/JhosepSF/FisiChecker-Project-Back)
+---
 
 ## 🚀 Características Principales
 
-- **Auditorías Multi-Modo**:
-  - `RAW`: Análisis de HTML estático
-  - `RENDERED`: Análisis de contenido renderizado (Playwright)
-  - `AI`: Análisis asistido por IA (Ollama)
-  - `AUTO`: Selección automática del modo óptimo
+* **Auditoría Integral de 78 Criterios WCAG 2.1**:
+  * **Principio 1: Perceptible** (29 criterios) — Contraste de color, alternativas de texto (alt), jerarquía semántica, subtítulos, redimensionamiento de texto y diseño adaptable (reflow).
+  * **Principio 2: Operable** (29 criterios) — Accesibilidad completa por teclado, sin trampas de foco, enlaces y botones descriptivos, skip-links, páginas tituladas y control de movimiento.
+  * **Principio 3: Comprensible** (17 criterios) — Idioma de la página y partes, prevención e identificación de errores en formularios, etiquetas claras e instrucciones.
+  * **Principio 4: Robusto** (3 criterios) — Análisis sintáctico (parsing sin IDs duplicados), nombre/rol/valor en componentes ARIA y regiones de estado.
 
-- **Evaluación WCAG 2.1**:
-  - Niveles de conformidad A, AA, AAA
-  - 4 Principios: Perceptible, Operable, Comprensible, Robusto
-  - Múltiples criterios de éxito evaluados
+* **Frontend Unificado (Sin dependencias de Node.js)**:
+  * Renderizado directo con Django Templates y estilos CSS modernos.
+  * Selector de tema Claro / Oscuro con persistencia en navegador.
+  * Filtrado interactivo en vivo por Principio, Nivel (A/AA/AAA) y Veredicto (*Cumple, No Cumple, Parcial, N/A*).
+  * Desglose con explicaciones pedagógicas: *"¿Qué evalúa este criterio?"* y *"¿Qué se detectó en el código?"*.
 
-- **Estadísticas y Reportes**:
-  - Puntuaciones de accesibilidad
-  - Estadísticas por nivel y principio
-  - Análisis comparativo de resultados
+* **Métricas y Análisis Avanzado**:
+  * Puntuación de conformidad global calculada según la fórmula de **Hilera et al.** (excluyendo criterios no aplicables).
+  * Clasificación de accesibilidad: *Alto, Moderado, Deficiente, Muy deficiente*.
+  * Script integrado para análisis y generación de gráficos en **Google Colab**.
 
-- **Persistencia de Datos**:
-  - Almacenamiento de auditorías históricas
-  - Resultados detallados por criterio
-  - Exportación de datos
+* **Exportación y Gestión de Reportes**:
+  * Exportación en **Excel (.xlsx)** con hojas separadas de *Resumen* y *Detalles de Criterios*.
+  * Exportación en **CSV** con soporte de codificación UTF-8 BOM.
+  * Historial de auditorías persistido por usuario en base de datos.
 
-## 📦 Instalación
+---
 
-### Requisitos Previos
+## 🛠️ Requisitos del Sistema
 
-- Python 3.10 o superior
-- pip
-- SQLite (incluido por defecto) o MySQL
-- Node.js (para Playwright)
+* **Python 3.10 o superior**
+* **pip** (gestor de paquetes de Python)
+* **SQLite** (incluido por defecto) o **MySQL / PostgreSQL**
 
-### Pasos de Instalación
+---
 
-1. **Clonar el repositorio**:
+## 📦 Instalación y Puesta en Marcha
+
+### 1. Clonar el repositorio
 ```bash
-git clone https://github.com/JhosepSF/FisiChecker-Project-Back.git
-cd FisiChecker-Project-Back
+git clone https://github.com/JhosepSF/FisiChecker.git
+cd FisiChecker/Back
 ```
 
-2. **Crear y activar entorno virtual**:
+### 2. Crear y activar entorno virtual
 ```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
+# En Windows (PowerShell):
+python -m venv .venv
+.venv\Scripts\activate
 
-# Linux/Mac
-python -m venv venv
-source venv/bin/activate
+# En Linux / macOS:
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
-3. **Instalar dependencias**:
+### 3. Instalar dependencias
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **Instalar Playwright** (para modo RENDERED):
-```bash
-playwright install
-```
-
-5. **Configurar base de datos**:
+### 4. Configurar Base de Datos y Migraciones
 ```bash
 python manage.py migrate
 ```
 
-6. **Crear superusuario** (opcional):
+### 5. Crear usuario administrador (Opcional pero recomendado)
 ```bash
 python manage.py createsuperuser
 ```
 
-## 🏃 Ejecución
-
-### Modo Desarrollo
-
+### 6. Iniciar el Servidor de Aplicación
 ```bash
 python manage.py runserver
 ```
 
-La API estará disponible en `http://localhost:8000`
+La aplicación estará lista y accesible en tu navegador en:
+👉 **`http://127.0.0.1:8000/`**
 
-### Modo Producción
-
-Para producción, se recomienda usar Gunicorn o uWSGI:
-
-```bash
-pip install gunicorn
-gunicorn FisiChecker.wsgi:application --bind 0.0.0.0:8000
-```
-
-## 🛠️ Tecnologías Utilizadas
-
-- **Django 5.2.5** - Framework web
-- **Django REST Framework** - API REST
-- **BeautifulSoup4** - Parsing HTML
-- **Playwright** - Renderizado y análisis dinámico
-- **Requests** - Cliente HTTP
-- **SQLite/MySQL** - Base de datos
-- **CORS Headers** - Manejo de CORS
-- **OpenPyXL** - Exportación Excel
+---
 
 ## 📁 Estructura del Proyecto
 
 ```
-Back/
-├── FisiChecker/           # Configuración del proyecto Django
-│   ├── settings.py        # Configuración principal
-│   ├── urls.py            # Rutas principales
-│   └── wsgi.py            # WSGI config
-├── audits/                # App principal de auditorías
-│   ├── models.py          # Modelos de datos
-│   ├── views.py           # Vistas/endpoints API
-│   ├── serializers.py     # Serializadores DRF
-│   ├── audit.py           # Lógica de auditoría
-│   ├── statistics.py      # Cálculo de estadísticas
-│   ├── checks/            # Sistema de verificaciones
-│   │   └── criteria/      # Criterios WCAG implementados
-│   ├── ai/                # Integración con IA
-│   │   ├── ollama_client.py
-│   │   └── helper.py
-│   ├── utils/             # Utilidades
-│   └── wcag/              # Recursos WCAG
-├── manage.py              # CLI de Django
-├── requirements.txt       # Dependencias Python
-└── db.sqlite3            # Base de datos SQLite
+FisiChecker/
+└── Back/
+    ├── FisiChecker/              # Configuración global del proyecto Django
+    │   ├── settings.py           # Configuración de base de datos, sesiones y static
+    │   ├── urls.py               # Enrutamiento de vistas web y API REST
+    │   └── wsgi.py               # Entrada WSGI para producción
+    │
+    ├── audits/                   # Módulo central de auditorías WCAG
+    │   ├── models.py             # Modelos WebsiteAudit y WebsiteAuditResult
+    │   ├── views.py              # Vistas HTML y controladores de API REST
+    │   ├── audit.py              # Motor de orquestación de auditorías
+    │   ├── statistics.py         # Métricas Hilera et al. y reportes estadísticos
+    │   │
+    │   ├── checks/criteria/      # Implementación individual de los 78 criterios WCAG
+    │   │   ├── p1/               # Criterios del Principio 1 (Perceptible)
+    │   │   ├── p2/               # Criterios del Principio 2 (Operable)
+    │   │   ├── p3/               # Criterios del Principio 3 (Comprensible)
+    │   │   └── p4/               # Criterios del Principio 4 (Robusto)
+    │   │
+    │   ├── wcag/                 # Utilidades WCAG y analizador profundo (enricher)
+    │   │   ├── context.py        # Extractor del DOM y árbol de elementos
+    │   │   ├── enricher.py       # Enriquecimiento semántico y detección de evidencias
+    │   │   └── constants.py      # Metadatos oficiales WCAG 2.1
+    │   │
+    │   ├── templates/audits/     # Plantillas HTML del Frontend
+    │   │   ├── base.html         # Layout base con header, usuario y tema
+    │   │   ├── login.html        # Formulario de autenticación
+    │   │   ├── panel.html        # Panel de control y auditoría en tiempo real
+    │   │   ├── audit_detail.html # Reporte completo e imprimible
+    │   │   └── colab.html        # Script para Google Colab
+    │   │
+    │   └── static/audits/        # Archivos estáticos CSS y JS
+    │       ├── css/login.css     # Estilos de inicio de sesión
+    │       ├── css/panel.css     # Sistema de diseño con modo oscuro
+    │       └── js/panel.js       # Interactividad, filtros y cliente de auditoría
+    │
+    ├── manage.py                 # CLI de gestión Django
+    ├── requirements.txt          # Dependencias Python del proyecto
+    └── db.sqlite3                # Base de datos local
 ```
-
-## 🔌 API Endpoints
-
-### Auditorías
-
-#### POST `/api/audit/`
-Crear nueva auditoría de accesibilidad.
-
-**Request Body**:
-```json
-{
-  "url": "https://ejemplo.com",
-  "mode": "rendered"  // "raw" | "rendered" | "ai" | "auto"
-}
-```
-
-**Response**:
-```json
-{
-  "id": 1,
-  "url": "https://ejemplo.com",
-  "score": 85.5,
-  "status_code": 200,
-  "results": { ... },
-  "fetched_at": "2026-02-10T10:30:00Z"
-}
-```
-
-#### GET `/api/audits/`
-Listar todas las auditorías.
-
-#### GET `/api/audits/{id}/`
-Obtener detalle de una auditoría específica.
-
-### Estadísticas
-
-#### GET `/api/audits/{id}/statistics/`
-Obtener estadísticas detalladas de una auditoría.
-
-**Response**:
-```json
-{
-  "overall_score": 85.5,
-  "level_stats": {
-    "A": { "total": 20, "pass": 18, "fail": 2 },
-    "AA": { "total": 15, "pass": 12, "fail": 3 },
-    "AAA": { "total": 10, "pass": 7, "fail": 3 }
-  },
-  "principle_stats": { ... }
-}
-```
-
-## ⚙️ Configuración
-
-### Variables de Entorno
-
-Crea un archivo `.env` en la raíz del proyecto:
-
-```env
-DEBUG=True
-SECRET_KEY=tu-clave-secreta-segura
-ALLOWED_HOSTS=localhost,127.0.0.1
-DATABASE_URL=sqlite:///db.sqlite3
-
-# Configuración Ollama (opcional para modo AI)
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=llama2
-```
-
-### Base de Datos
-
-Por defecto usa SQLite. Para usar MySQL, actualiza `settings.py`:
-
-```python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'fisichecker',
-        'USER': 'usuario',
-        'PASSWORD': 'contraseña',
-        'HOST': 'localhost',
-        'PORT': '3306',
-    }
-}
-```
-
-## 🧪 Testing
-
-Ejecutar tests:
-
-```bash
-# Todos los tests
-python manage.py test
-
-# Tests específicos
-python test_audit_strict.py
-python test_statistics.py
-```
-
-## 📊 Scripts Útiles
-
-- `check_statistics.py` - Verificar cálculos estadísticos
-- `benchmark_urls.py` - Benchmark de rendimiento
-- `clean_db.py` - Limpiar base de datos
-- `debug_credito.py` - Debug de análisis específico
-- `run_audit_auto_ai.py` - Ejecutar auditoría con IA
-
-## 🔍 Modos de Análisis
-
-### RAW (HTML Estático)
-Análisis rápido del HTML sin ejecutar JavaScript. Ideal para verificaciones básicas.
-
-### RENDERED (Playwright)
-Renderiza la página en un navegador real y analiza el DOM final. Detecta problemas dinámicos.
-
-### AI (Ollama)
-Análisis asistido por IA para detectar problemas complejos de accesibilidad que requieren comprensión contextual.
-
-### AUTO
-Selecciona automáticamente el mejor modo según las características del sitio.
-
-## 📈 Sistema de Puntuación
-
-- **100**: Accesibilidad perfecta
-- **80-99**: Buena accesibilidad, mejoras menores
-- **60-79**: Accesibilidad aceptable, requiere mejoras
-- **40-59**: Accesibilidad deficiente
-- **0-39**: Accesibilidad muy pobre
-
-## 🐛 Debugging
-
-Ver logs de auditoría:
-```bash
-tail -f audit_auto_ai_log.txt
-```
-
-Modo debug en Django:
-```python
-# settings.py
-DEBUG = True
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'DEBUG',
-    },
-}
-```
-
-## 🔐 Seguridad
-
-- Cambia `SECRET_KEY` en producción
-- Configura `ALLOWED_HOSTS` apropiadamente
-- Establece `DEBUG = False` en producción
-- Usa HTTPS en producción
-- Configura CORS correctamente para tu frontend
-
-## 📚 Documentación Adicional
-
-- [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
-- [Django Documentation](https://docs.djangoproject.com/)
-- [Django REST Framework](https://www.django-rest-framework.org/)
-- [Playwright Python](https://playwright.dev/python/)
-
-## 🤝 Contribuciones
-
-Las contribuciones son bienvenidas. Para contribuir:
-
-1. Fork el repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
-## 📄 Licencia
-
-[Especificar licencia del proyecto]
-
-## ✉️ Contacto
-
-Para consultas o soporte, visita el repositorio en GitHub o contacta al equipo de desarrollo.
 
 ---
 
-**Desarrollado como parte del proyecto de tesis FisiChecker**
+## 🔌 Rutas y Endpoints Disponibles
+
+### Vistas Web (Frontend)
+| Ruta | Descripción |
+| :--- | :--- |
+| **`/` o `/panel/`** | Panel Principal: Buscador de URLs, ejecución de auditoría y filtros interactivos. |
+| **`/login/`** | Pantalla de inicio de sesión de usuarios y auditores. |
+| **`/logout/`** | Cierre seguro de sesión. |
+| **`/audits/<id>/`** | Vista detallada e imprimible del reporte de una auditoría guardada. |
+| **`/colab/`** | Cuaderno de análisis con script en Python para Google Colab. |
+| **`/admin/`** | Panel de administración de Django (gestión de usuarios y registros). |
+
+### Exportación de Datos
+| Endpoint | Formato | Descripción |
+| :--- | :--- | :--- |
+| **`GET /api/export/excel`** | `.xlsx` | Libro Excel con hojas de *Resumen* y *Criterios WCAG*. |
+| **`GET /api/export/csv`** | `.csv` | Archivo CSV detallado de las auditorías del usuario. |
+
+### API REST
+| Endpoint | Método | Descripción |
+| :--- | :--- | :--- |
+| **`/api/audit`** | `POST` | Ejecuta una nueva auditoría enviando `{"url": "https://..."}`. |
+| **`/api/audits`** | `GET` | Lista las auditorías del usuario autenticado. |
+| **`/api/audits/<id>`** | `GET` | Obtiene el JSON completo con resultados de una auditoría. |
+| **`/api/audits/<id>/delete/`** | `DELETE` | Elimina una auditoría y sus registros vinculados. |
+| **`/api/statistics/report/`** | `GET` | Reporte consolidado de métricas y estadísticas globales. |
+
+---
+
+## 📄 Licencia
+
+Este proyecto se distribuye bajo la **Licencia MIT**.
+
+```
+MIT License
+
+Copyright (c) 2026 JhosepSF - FisiChecker (UNMSM - FISI)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+---
+
+## 🎓 Créditos y Contexto Académico
+
+Desarrollado como proyecto de investigación y desarrollo en la **Facultad de Ingeniería de Sistemas e Informática (FISI)** de la **Universidad Nacional Mayor de San Marcos (UNMSM)**, Lima, Perú.
