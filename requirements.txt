@@ -1,0 +1,22 @@
+Django==5.2.5
+
+djangorestframework
+django-cors-headers
+PyMySQL
+requests
+beautifulsoup4
+lxml
+playwright
+openpyxl
+webcolors
+matplotlib
+python-dotenv
+cryptography
+gunicorn
+ftfy
+tldextract
+
+# Type checking support
+django-stubs
+types-requests
+types-beautifulsoup4

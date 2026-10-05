@@ -1,0 +1,237 @@
+{% extends 'audits/base.html' %}
+{% load static %}
+
+{% block title %}Auditoría #{{ audit.id }} - {{ audit.url }} - FisiChecker{% endblock %}
+
+{% block content %}
+<!-- Cabecera de Detalle -->
+<div class="card">
+  <div class="card-header">
+    <div>
+      <div class="row gap-sm" style="margin-bottom: 4px;">
+        <span class="badge" style="background: var(--c-brand); color: #fff;">Auditoría #{{ audit.id }}</span>
+        <span class="hint">{{ audit.fetched_at|date:"d/m/Y H:i:s" }}</span>
+      </div>
+      <h2 class="subtitulo" style="margin: 4px 0;">
+        {{ audit.page_title|default:audit.url }}
+      </h2>
+      <a href="{{ audit.url }}" target="_blank" rel="noopener noreferrer" style="color: var(--c-brand); font-weight: 600; text-decoration: none; word-break: break-all;">
+        🔗 {{ audit.url }}
+      </a>
+      <div class="hint" style="margin-top: 6px;">
+        Estado HTTP: <strong>{{ audit.status_code|default:"200" }}</strong> • 
+        Tiempo de carga: <strong>{{ audit.elapsed_ms|default:"0" }} ms</strong> • 
+        Criterios evaluados: <strong>{{ results|length }}</strong>
+      </div>
+    </div>
+
+    <div class="row gap-sm">
+      <a href="{% url 'panel' %}" class="audit-btn secondary sm">
+        ⬅ Volver al Panel
+      </a>
+      <button type="button" class="audit-btn sm" onclick="window.print()">
+        🖨️ Imprimir / PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Barra de Puntuación General -->
+  <div class="score-row" style="margin-top: 16px;">
+    <div class="score-box">
+      <div class="score-title">Nivel de Cumplimiento General (Score WCAG)</div>
+      <div class="scorebar">
+        <div class="scorebar-fill" style="width: {% if audit.score is not None %}{% widthratio audit.score 1 100 %}{% else %}0{% endif %}%;"></div>
+        <span class="scorebar-label">
+          {% if audit.score is not None %}{% widthratio audit.score 1 100 %}%{% else %}—{% endif %}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumen de Veredictos -->
+  <div class="summary-grid">
+    <div class="summary-card ok">
+      <div class="summary-icon">✅</div>
+      <div class="summary-title">{{ pass_count }}</div>
+      <div class="summary-sub">Criterios Cumplidos</div>
+    </div>
+    <div class="summary-card bad">
+      <div class="summary-icon">❌</div>
+      <div class="summary-title">{{ fail_count }}</div>
+      <div class="summary-sub">Criterios No Cumplidos</div>
+    </div>
+    <div class="summary-card warn">
+      <div class="summary-icon">⚠️</div>
+      <div class="summary-title">{{ partial_count }}</div>
+      <div class="summary-sub">Cumplimiento Parcial</div>
+    </div>
+    <div class="summary-card na">
+      <div class="summary-icon">ℹ️</div>
+      <div class="summary-title">{{ na_count }}</div>
+      <div class="summary-sub">No Aplica / Sin Elementos</div>
+    </div>
+  </div>
+</div>
+
+<!-- Filtros Rápidos de la Vista de Detalle -->
+<div class="card" style="background: var(--c-border-soft); box-shadow: none; padding: 14px 16px;">
+  <div class="row wrap" style="justify-content: space-between; gap: 16px;">
+    <div class="filter-group">
+      <span class="filter-label">Filtrar por Principio:</span>
+      <div class="chips">
+        <button type="button" class="chip active" onclick="filterDetailPrinciple('ALL', this)">Todos</button>
+        <button type="button" class="chip" onclick="filterDetailPrinciple('Perceptible', this)">Perceptible</button>
+        <button type="button" class="chip" onclick="filterDetailPrinciple('Operable', this)">Operable</button>
+        <button type="button" class="chip" onclick="filterDetailPrinciple('Comprensible', this)">Comprensible</button>
+        <button type="button" class="chip" onclick="filterDetailPrinciple('Robusto', this)">Robusto</button>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <span class="filter-label">Filtrar por Veredicto:</span>
+      <div class="chips">
+        <button type="button" class="chip active" onclick="filterDetailVerdict('ALL', this)">Todos</button>
+        <button type="button" class="chip chip-ok" onclick="filterDetailVerdict('pass', this)">Cumple</button>
+        <button type="button" class="chip chip-bad" onclick="filterDetailVerdict('fail', this)">No Cumple</button>
+        <button type="button" class="chip" onclick="filterDetailVerdict('partial', this)">Parcial</button>
+        <button type="button" class="chip chip-neutral" onclick="filterDetailVerdict('na', this)">N/A</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 12px;">
+    <input
+      type="text"
+      id="detail-search-input"
+      class="audit-input"
+      placeholder="🔍 Buscar por código o descripción en este reporte..."
+      style="width: 100%; max-width: 100%;"
+      oninput="searchDetailCriteria(this.value)"
+    />
+  </div>
+</div>
+
+<!-- Desglose Completo de Criterios WCAG -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="subtitulo">Desglose Detallado de Criterios WCAG 2.1</h2>
+  </div>
+
+  <div class="criteria-list" id="detail-criteria-container">
+    {% for r in results %}
+      <details
+        class="criterion detail-item"
+        data-principle="{{ r.principle }}"
+        data-level="{{ r.level }}"
+        data-verdict="{{ r.verdict }}"
+        data-code="{{ r.code }}"
+        data-title="{{ r.title }}"
+      >
+        <summary class="criterion-summary">
+          <span class="criterion-code">{{ r.code }}</span>
+          <span class="criterion-title">{{ r.title }}</span>
+          <span class="principle">{{ r.principle }}</span>
+          <span class="level level-{{ r.level }}">{{ r.level }}</span>
+          <span class="verdict verdict-{{ r.verdict }}">
+            {% if r.verdict == 'pass' %}CUMPLE
+            {% elif r.verdict == 'fail' %}NO CUMPLE
+            {% elif r.verdict == 'partial' %}PARCIAL
+            {% else %}N/A{% endif %}
+          </span>
+        </summary>
+
+        <div class="criterion-body">
+          {% if r.explain %}
+            <div class="callout info">
+              <div class="callout-title">📘 ¿Qué evalúa este criterio?</div>
+              <div>{{ r.explain }}</div>
+            </div>
+          {% endif %}
+
+          {% if r.details_errors %}
+            <div class="callout warn">
+              <div class="callout-title">⚠️ Errores Detectados:</div>
+              <ul>
+                {% for err in r.details_errors %}
+                  <li>{{ err }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+          {% if r.details_evidences %}
+            <div class="callout info">
+              <div class="callout-title">🔍 Elementos Evaluados:</div>
+              <ul>
+                {% for ev in r.details_evidences %}
+                  <li>{{ ev }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+          {% if r.raw_json %}
+            <details style="margin-top: 10px;">
+              <summary style="font-size: 13px; font-weight: 600; cursor: pointer; color: var(--c-muted);">
+                Ver detalles técnicos (JSON)
+              </summary>
+              <pre class="json" style="margin-top: 8px;"><code>{{ r.raw_json }}</code></pre>
+            </details>
+          {% endif %}
+        </div>
+      </details>
+    {% empty %}
+      <div class="alert warn" style="text-align: center;">
+        No hay criterios registrados para esta auditoría.
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let currentPrinciple = 'ALL';
+  let currentVerdict = 'ALL';
+  let currentSearch = '';
+
+  function filterDetailPrinciple(principle, btn) {
+    currentPrinciple = principle;
+    btn.parentElement.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyDetailFilters();
+  }
+
+  function filterDetailVerdict(verdict, btn) {
+    currentVerdict = verdict;
+    btn.parentElement.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyDetailFilters();
+  }
+
+  function searchDetailCriteria(val) {
+    currentSearch = val.toLowerCase().trim();
+    applyDetailFilters();
+  }
+
+  function applyDetailFilters() {
+    const items = document.querySelectorAll('.detail-item');
+    items.forEach(item => {
+      const p = item.getAttribute('data-principle') || '';
+      const v = item.getAttribute('data-verdict') || '';
+      const c = (item.getAttribute('data-code') || '').toLowerCase();
+      const t = (item.getAttribute('data-title') || '').toLowerCase();
+
+      const matchP = currentPrinciple === 'ALL' || p.toLowerCase() === currentPrinciple.toLowerCase();
+      const matchV = currentVerdict === 'ALL' || v.toLowerCase() === currentVerdict.toLowerCase();
+      const matchS = !currentSearch || c.includes(currentSearch) || t.includes(currentSearch);
+
+      if (matchP && matchV && matchS) {
+        item.style.display = '';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+</script>
+{% endblock %}

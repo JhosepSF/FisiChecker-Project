@@ -1,0 +1,227 @@
+{% extends 'audits/base.html' %}
+{% load static %}
+
+{% block title %}Panel de Auditoría - FisiChecker{% endblock %}
+
+{% block content %}
+<!-- Tarjeta de Entrada de URL (Auditoría Unificada) -->
+<div class="card input-card">
+  <div class="card-header">
+    <div>
+      <h2 class="subtitulo">Nueva Auditoría Web</h2>
+      <p class="hint">Ingresa la dirección URL del sitio web que deseas auditar bajo el estándar WCAG 2.1.</p>
+    </div>
+  </div>
+
+  <div id="audit-error-alert" class="alert error" style="display: none;"></div>
+
+  <form id="audit-form" class="audit-form">
+    <input
+      type="url"
+      id="audit-url-input"
+      class="audit-input"
+      placeholder="https://ejemplo.com"
+      required
+      autocomplete="url"
+    />
+    <button type="submit" id="audit-submit-btn" class="audit-btn">
+      🔍 Auditar
+    </button>
+  </form>
+
+  <div class="help-row">
+    <div class="examples">
+      <span class="examples-label">Ejemplos rápidos:</span>
+      <button type="button" class="chip chip-example" onclick="setExampleUrl('https://www.gob.pe')">gob.pe</button>
+      <button type="button" class="chip chip-example" onclick="setExampleUrl('https://unmsm.edu.pe')">unmsm.edu.pe</button>
+      <button type="button" class="chip chip-example" onclick="setExampleUrl('https://www.w3.org')">w3.org</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tarjeta de Resultados Activos de Auditoría (Generado dinámicamente) -->
+<div id="audit-results-card" class="card" style="display: none;">
+  <div class="card-header">
+    <div>
+      <h2 class="subtitulo" id="result-title">Resultados de la Auditoría</h2>
+      <a href="#" id="result-url" target="_blank" rel="noopener noreferrer" style="font-weight: 600; color: var(--c-brand); text-decoration: none;">—</a>
+      <div id="result-meta-info" class="hint" style="margin-top: 4px;">—</div>
+    </div>
+  </div>
+
+  <!-- Barra de Puntuación General -->
+  <div class="score-row">
+    <div class="score-box">
+      <div class="score-title">Nivel de Cumplimiento General (Score WCAG)</div>
+      <div class="scorebar">
+        <div id="result-score-fill" class="scorebar-fill" style="width: 0%;"></div>
+        <span id="result-score-label" class="scorebar-label">0%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tarjetas de Resumen por Veredicto -->
+  <div class="summary-grid">
+    <div class="summary-card ok">
+      <div class="summary-icon">✅</div>
+      <div class="summary-title" id="count-pass">0</div>
+      <div class="summary-sub">Criterios Cumplidos</div>
+    </div>
+    <div class="summary-card bad">
+      <div class="summary-icon">❌</div>
+      <div class="summary-title" id="count-fail">0</div>
+      <div class="summary-sub">Criterios No Cumplidos</div>
+    </div>
+    <div class="summary-card warn">
+      <div class="summary-icon">⚠️</div>
+      <div class="summary-title" id="count-partial">0</div>
+      <div class="summary-sub">Cumplimiento Parcial</div>
+    </div>
+    <div class="summary-card na">
+      <div class="summary-icon">ℹ️</div>
+      <div class="summary-title" id="count-na">0</div>
+      <div class="summary-sub">No Aplica / Sin Elementos</div>
+    </div>
+  </div>
+
+  <!-- Filtros Interactivos -->
+  <div class="card" style="background: var(--c-border-soft); box-shadow: none; padding: 14px 16px; margin: 16px 0;">
+    <div class="row wrap" style="justify-content: space-between; gap: 16px;">
+      <!-- Filtro por Principio -->
+      <div class="filter-group">
+        <span class="filter-label">Principio:</span>
+        <div class="chips">
+          <button type="button" class="chip active" data-filter-principle="ALL">Todos</button>
+          <button type="button" class="chip" data-filter-principle="Perceptible">Perceptible</button>
+          <button type="button" class="chip" data-filter-principle="Operable">Operable</button>
+          <button type="button" class="chip" data-filter-principle="Comprensible">Comprensible</button>
+          <button type="button" class="chip" data-filter-principle="Robusto">Robusto</button>
+        </div>
+      </div>
+
+      <!-- Filtro por Nivel -->
+      <div class="filter-group">
+        <span class="filter-label">Nivel:</span>
+        <div class="chips">
+          <button type="button" class="chip active" data-filter-level="ALL">Todos</button>
+          <button type="button" class="chip" data-filter-level="A">Nivel A</button>
+          <button type="button" class="chip" data-filter-level="AA">Nivel AA</button>
+          <button type="button" class="chip" data-filter-level="AAA">Nivel AAA</button>
+        </div>
+      </div>
+
+      <!-- Filtro por Veredicto -->
+      <div class="filter-group">
+        <span class="filter-label">Veredicto:</span>
+        <div class="chips">
+          <button type="button" class="chip active" data-filter-verdict="ALL">Todos</button>
+          <button type="button" class="chip chip-ok" data-filter-verdict="pass">Cumple</button>
+          <button type="button" class="chip chip-bad" data-filter-verdict="fail">No Cumple</button>
+          <button type="button" class="chip" data-filter-verdict="partial">Parcial</button>
+          <button type="button" class="chip chip-neutral" data-filter-verdict="na">N/A</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buscador de Criterios -->
+    <div style="margin-top: 12px;">
+      <input
+        type="text"
+        id="criteria-search-input"
+        class="audit-input"
+        placeholder="🔍 Buscar por código (ej. 1.1.1, 1.4.3) o palabra clave..."
+        style="width: 100%; max-width: 100%;"
+      />
+    </div>
+  </div>
+
+  <!-- Contenedor de la Lista de Criterios WCAG -->
+  <div id="criteria-list-container" class="criteria-list"></div>
+</div>
+
+<!-- Tarjeta de Auditorías Recientes del Usuario -->
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h2 class="subtitulo">Historial de Auditorías Recientes</h2>
+      <p class="hint">Listado de evaluaciones realizadas guardadas en tu cuenta.</p>
+    </div>
+
+    <div class="row gap-sm">
+      <a href="{% url 'export-csv' %}" class="audit-btn sm secondary" title="Exportar historial completo a CSV">
+        📥 Exportar CSV
+      </a>
+      <a href="{% url 'export-excel' %}" class="audit-btn sm secondary" title="Exportar historial completo a Excel con múltiples hojas">
+        📊 Exportar Excel
+      </a>
+    </div>
+  </div>
+
+  <div class="table-scroll overflow-x">
+    <table class="details-table">
+      <thead>
+        <tr>
+          <th style="width: 60px;">ID</th>
+          <th>URL & Título</th>
+          <th style="width: 100px;">Score</th>
+          <th style="width: 160px;">Fecha</th>
+          <th style="width: 140px; text-align: right;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="recent-audits-tbody">
+        {% for a in audits %}
+          <tr id="audit-row-{{ a.id }}">
+            <td><strong>#{{ a.id }}</strong></td>
+            <td style="max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              <a href="{{ a.url }}" target="_blank" rel="noopener noreferrer" style="color: var(--c-brand); font-weight: 600; text-decoration: none;">
+                {{ a.url }}
+              </a>
+              <div style="font-size: 12px; color: var(--c-muted);">{{ a.page_title|default:"" }}</div>
+            </td>
+            <td>
+              {% if a.score is not None %}
+                <span class="badge badge-ok">
+                  {% widthratio a.score 1 100 %}%
+                </span>
+              {% else %}
+                <span class="badge" style="background:#eee; color:#666;">—</span>
+              {% endif %}
+            </td>
+            <td style="font-size: 13px; color: var(--c-muted);">
+              {{ a.fetched_at|date:"d/m/Y H:i" }}
+            </td>
+            <td style="text-align: right;">
+              <div class="row gap-sm" style="justify-content: flex-end;">
+                <a href="{% url 'audit_detail_page' a.id %}" class="audit-btn sm secondary" title="Ver reporte completo">
+                  Ver Detalle
+                </a>
+                <button type="button" class="chip chip-bad" onclick="promptDeleteAudit({{ a.id }})" title="Eliminar">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr id="no-audits-row">
+            <td colspan="5" style="text-align: center; padding: 24px; color: var(--c-muted);">
+              No tienes auditorías registradas todavía. ¡Ingresa una URL arriba para realizar tu primera auditoría!
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal de Confirmación para Eliminar Auditoría -->
+<div id="delete-modal" class="modal-backdrop" style="display: none;">
+  <div class="modal-card">
+    <h3>¿Eliminar auditoría?</h3>
+    <p>Esta acción eliminará de forma permanente el registro de la auditoría y todas las evaluaciones de criterios asociadas.</p>
+    <div class="modal-actions">
+      <button type="button" id="delete-cancel-btn" class="modal-btn ghost">Cancelar</button>
+      <button type="button" id="delete-confirm-btn" class="modal-btn danger">Eliminar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

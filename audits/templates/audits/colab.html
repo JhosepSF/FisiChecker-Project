@@ -1,0 +1,138 @@
+{% extends 'audits/base.html' %}
+{% load static %}
+
+{% block title %}Script de Análisis Google Colab - FisiChecker{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h2 class="subtitulo">Código de Análisis – Google Colab</h2>
+      <p class="hint">Copia este script en tu Google Colab para procesar los reportes exportados (Excel/CSV) y generar métricas con la Fórmula de Hilera et al.</p>
+    </div>
+
+    <div class="row gap-sm">
+      <button type="button" id="copy-script-btn" class="audit-btn sm" onclick="copyColabCode()">
+        📋 Copiar Código
+      </button>
+      <a href="https://colab.research.google.com" target="_blank" rel="noopener noreferrer" class="audit-btn sm secondary">
+        🚀 Abrir Google Colab
+      </a>
+      <a href="{% url 'panel' %}" class="audit-btn sm secondary">
+        ⬅ Volver al Panel
+      </a>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-title">💡 Instrucciones de uso:</div>
+    <ol style="margin: 6px 0 0 18px; padding: 0; font-size: 14px; line-height: 1.6;">
+      <li>Descarga el archivo Excel de tus auditorías desde el Panel Principal mediante el botón <strong>📊 Exportar Excel</strong>.</li>
+      <li>Abre tu cuaderno en <strong>Google Colab</strong> o crea uno nuevo.</li>
+      <li>Copia y pega el código que aparece abajo.</li>
+      <li>Sube el archivo Excel a tu Google Drive o directamente al entorno de Colab y ajusta la ruta del archivo si es necesario.</li>
+      <li>Ejecuta las celdas para generar las tablas estadísticas, gráficos de distribución y niveles de accesibilidad.</li>
+    </ol>
+  </div>
+
+  <div class="overflow-x" style="margin-top: 14px;">
+    <pre id="colab-code-block" style="margin: 0; padding: 16px; border-radius: 10px; background: #0f172a; color: #f8fafc; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; line-height: 1.5; max-height: 560px; overflow-y: auto;"><code>#!/usr/bin/env python3
+"""
+Análisis de Accesibilidad Web - FisiChecker
+Fórmula de Hilera et al. (Excluyendo NA del denominador)
+"""
+
+# ==========================================
+# 1. SETUP BASE & INSTALACIÓN DE LIBRERÍAS
+# ==========================================
+from google.colab import drive
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from pathlib import Path
+from urllib.parse import urlparse
+from collections import Counter
+
+# Montar Google Drive si tus archivos están en Drive
+drive.mount('/content/drive')
+
+# Instalar dependencias necesarias
+!pip install -q pandas openpyxl matplotlib seaborn xlsxwriter
+
+# Configuración de estilo visual para gráficos
+plt.style.use('seaborn-v0_8-darkgrid')
+sns.set_palette("husl")
+
+# ==========================================
+# 2. RUTA DEL ARCHIVO EXPORTADO
+# ==========================================
+# Ajusta esta ruta con el nombre de tu archivo exportado desde FisiChecker
+EXCEL_PATH = Path("/content/drive/MyDrive/FisiChecker/auditorias_detalladas.xlsx")
+
+# ==========================================
+# 3. CARGA Y ANÁLISIS DE DATOS
+# ==========================================
+print("Cargando hojas de Excel...")
+df_resumen = pd.read_excel(EXCEL_PATH, sheet_name="Resumen")
+df_criterios = pd.read_excel(EXCEL_PATH, sheet_name="Criterios WCAG")
+
+print("--- Resumen de Auditorías ---")
+print(df_resumen.head())
+
+# Cálculo de Estadísticas Globales por Veredicto
+verdict_counts = df_criterios['Veredicto'].value_counts()
+print("\nDistribución de Veredictos:")
+print(verdict_counts)
+
+# Gráfico de Distribución de Veredictos
+plt.figure(figsize=(8, 5))
+sns.countplot(data=df_criterios, x='Veredicto', order=['pass', 'fail', 'partial', 'na'], palette='viridis')
+plt.title('Distribución Global de Veredictos WCAG 2.1')
+plt.xlabel('Veredicto')
+plt.ylabel('Cantidad de Evaluaciones')
+plt.tight_layout()
+plt.show()
+
+# Ranking de Criterios con Mayor Falla
+failing_criteria = df_criterios[df_criterios['Veredicto'] == 'fail']['Criterio'].value_counts().head(10)
+plt.figure(figsize=(10, 6))
+failing_criteria.plot(kind='barh', color='#e11d48')
+plt.title('Top 10 Criterios WCAG con Mayor Incumplimiento')
+plt.xlabel('Frecuencia de Fallos')
+plt.ylabel('Código de Criterio')
+plt.gca().invert_yaxis()
+plt.tight_layout()
+plt.show()
+
+print("¡Análisis completado exitosamente!")
+</code></pre>
+  </div>
+
+  <div class="row wrap gap-sm" style="margin-top: 16px;">
+    <button type="button" class="audit-btn" onclick="copyColabCode()">
+      📋 Copiar Código
+    </button>
+    <a href="{% url 'panel' %}" class="audit-btn secondary">
+      ⬅ Volver al Panel
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function copyColabCode() {
+    const code = document.getElementById('colab-code-block').innerText;
+    const btn = document.getElementById('copy-script-btn');
+    navigator.clipboard.writeText(code).then(() => {
+      if (btn) btn.textContent = '✅ ¡Copiado!';
+      setTimeout(() => {
+        if (btn) btn.textContent = '📋 Copiar Código';
+      }, 2500);
+    }).catch(err => {
+      alert('No se pudo copiar automáticamente. Por favor selecciónalo y cópialo manualmente.');
+    });
+  }
+</script>
+{% endblock %}

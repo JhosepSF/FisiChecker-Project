@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="FisiChecker - Sistema de Auditoría de Accesibilidad Web WCAG 2.1">
+  <title>{% block title %}FisiChecker - Auditoría WCAG{% endblock %}</title>
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="{% static 'audits/css/panel.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <div class="audit-container">
+    <!-- Encabezado Principal de la Aplicación -->
+    <header class="app-header">
+      <div class="row gap-sm" style="align-items: baseline;">
+        <h1 class="titulo">
+          <a href="{% url 'panel' %}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 8px;">
+            <span>🔍</span> FisiChecker
+          </a>
+        </h1>
+        <span style="font-size: 13px; color: var(--c-muted); font-weight: 500;">Auditoría WCAG 2.1</span>
+      </div>
+
+      <div class="user-info">
+        {% if user.is_authenticated %}
+          <span class="user-name">👤 {{ user.username }}</span>
+          
+          <a href="{% url 'panel' %}" class="chip chip-neutral" title="Panel Principal">
+            🏠 Panel
+          </a>
+          
+          <a href="{% url 'colab_analysis' %}" class="chip chip-neutral" title="Código para Google Colab">
+            📊 Script Colab
+          </a>
+
+          {% if user.is_staff %}
+            <a href="/admin/" class="chip chip-neutral" target="_blank" title="Administración de Django">
+              ⚙️ Admin
+            </a>
+          {% endif %}
+
+          <button type="button" id="theme-toggle-btn" class="chip chip-neutral" title="Cambiar Tema">
+            🌙 Oscuro
+          </button>
+
+          <a href="{% url 'logout_view' %}" class="chip chip-bad outline" title="Cerrar Sesión">
+            🚪 Salir
+          </a>
+        {% else %}
+          <button type="button" id="theme-toggle-btn" class="chip chip-neutral" title="Cambiar Tema">
+            🌙 Oscuro
+          </button>
+          <a href="{% url 'login_page' %}" class="audit-btn sm" style="text-decoration: none;">
+            🔐 Iniciar Sesión
+          </a>
+        {% endif %}
+      </div>
+    </header>
+
+    <!-- Mensajes Flash de Django -->
+    {% if messages %}
+      <div style="margin: 12px 0;">
+        {% for message in messages %}
+          <div class="alert {% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warn{% else %}info{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Contenido Específico de la Página -->
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- Pie de página -->
+    <footer style="margin-top: 40px; padding: 20px 0; border-top: 1px solid var(--c-border); text-align: center; color: var(--c-muted); font-size: 13px;">
+      <p style="margin: 0;">FisiChecker &copy; {% now "Y" %} — Evaluación de Accesibilidad Web bajo Estándar WCAG 2.1 (A, AA, AAA)</p>
+    </footer>
+  </div>
+
+  <!-- Scripts -->
+  <script src="{% static 'audits/js/panel.js' %}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
